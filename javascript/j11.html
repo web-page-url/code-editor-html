@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Code Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css">
+    
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(to bottom, #1a1a1a, #0d0d0d);
+            --editor-bg: #1e1e1e;
+            --header-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+            --accent-color: #6366f1;
+            --text-primary: #fff;
+            --text-secondary: #a1a1aa;
+            --line-number-color: #4b5563;
+            --line-number-active: #6366f1;
+            --border-color: #2d2d2d;
+            --font-mono: 'Fira Code', monospace;
+            --font-sans: 'Inter', sans-serif;
+            --line-height: 1.6;
+            --font-size: 14px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            background: var(--header-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .editor-container {
+            background: rgba(30, 30, 30, 0.5);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .editor-wrapper {
+            position: relative;
+            height: 500px;
+            display: flex;
+        }
+
+        .line-numbers {
+            width: 60px;
+            background: rgba(0, 0, 0, 0.2);
+            border-right: 1px solid var(--border-color);
+            padding: 1rem 0;
+            font-family: var(--font-mono);
+            font-size: var(--font-size);
+            color: var(--line-number-color);
+            user-select: none;
+        }
+
+        .line-numbers span {
+            display: block;
+            text-align: right;
+            padding-right: 1rem;
+            line-height: var(--line-height);
+        }
+
+        .line-numbers span.active {
+            color: var(--line-number-active);
+            font-weight: 500;
+        }
+
+        .editor-content {
+            flex: 1;
+            position: relative;
+            background: var(--editor-bg);
+        }
+
+        #editor {
+            position: absolute;
+            inset: 0;
+            padding: 1rem;
+            font-family: var(--font-mono);
+            font-size: var(--font-size);
+            line-height: var(--line-height);
+            background: transparent;
+            color: transparent;
+            caret-color: var(--accent-color);
+            border: none;
+            resize: none;
+            outline: none;
+            z-index: 2;
+        }
+
+        #highlight {
+            position: absolute;
+            inset: 0;
+            padding: 1rem;
+            font-family: var(--font-mono);
+            font-size: var(--font-size);
+            line-height: var(--line-height);
+            pointer-events: none;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            z-index: 1;
+        }
+
+        .button-container {
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-family: var(--font-sans);
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--header-gradient);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        #output {
+            margin-top: 1.5rem;
+            background: rgba(30, 30, 30, 0.5);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            font-family: var(--font-mono);
+            font-size: var(--font-size);
+            line-height: var(--line-height);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .editor-wrapper {
+                height: 400px;
+            }
+
+            .line-numbers {
+                width: 50px;
+            }
+
+            .button-container {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 1.5rem;
+            }
+
+            .editor-header {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Professional Code Editor</h1>
+            <p>Write, Edit, and Execute JavaScript Code</p>
+        </header>
+
+        <div class="editor-container">
+            <div class="editor-header">
+                <div class="file-info">
+                    <i class="fas fa-code"></i>
+                    <span>script.js</span>
+                </div>
+                <div class="file-info">
+                    <i class="fas fa-clock"></i>
+                    <span>JavaScript</span>
+                </div>
+            </div>
+
+            <div class="editor-wrapper">
+                <div class="line-numbers"></div>
+                <div class="editor-content">
+                    <textarea id="editor" spellcheck="false" placeholder="Write your code here..."></textarea>
+                    <pre id="highlight"><code class="language-javascript"></code></pre>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <button class="btn btn-primary" onclick="runCode()">
+                    <i class="fas fa-play"></i>
+                    Run Code
+                </button>
+            </div>
+        </div>
+
+        <div id="output" style="display: none;"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-javascript.min.js"></script>
+    
+    <script>
+        const editor = document.getElementById('editor');
+        const highlight = document.getElementById('highlight');
+        const lineNumbers = document.querySelector('.line-numbers');
+        const code = highlight.querySelector('code');
+        const output = document.getElementById('output');
+
+        function updateLineNumbers() {
+            const lines = editor.value.split('\n');
+            const currentLine = editor.value.substr(0, editor.selectionStart).split('\n').length;
+            
+            lineNumbers.innerHTML = lines
+                .map((_, index) => `<span ${index + 1 === currentLine ? 'class="active"' : ''}>${index + 1}</span>`)
+                .join('');
+        }
+
+        function updateHighlight() {
+            code.textContent = editor.value;
+            Prism.highlightElement(code);
+        }
+
+        function syncScroll() {
+            highlight.scrollTop = editor.scrollTop;
+            highlight.scrollLeft = editor.scrollLeft;
+            lineNumbers.scrollTop = editor.scrollTop;
+        }
+
+        function runCode() {
+            output.style.display = 'block';
+            const code = editor.value;
+            
+            const originalLog = console.log;
+            let logs = [];
+
+            console.log = (...args) => {
+                logs.push(args.join(' '));
+            };
+
+            try {
+                const result = new Function(code)();
+                console.log = originalLog;
+
+                output.textContent = logs.join('\n');
+                if (result !== undefined) {
+                    output.textContent += '\n=> ' + result;
+                }
+            } catch (error) {
+                console.log = originalLog;
+                output.textContent = '❌ Error: ' + error.message;
+            }
+        }
+
+        editor.addEventListener('input', () => {
+            updateHighlight();
+            updateLineNumbers();
+        });
+
+        editor.addEventListener('scroll', syncScroll);
+        editor.addEventListener('keyup', updateLineNumbers);
+        editor.addEventListener('click', updateLineNumbers);
+
+        editor.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = editor.selectionStart;
+                const end = editor.selectionEnd;
+                editor.value = editor.value.substring(0, start) + '    ' + editor.value.substring(end);
+                editor.selectionStart = editor.selectionEnd = start + 4;
+                updateHighlight();
+            }
+        });
+
+        const sampleCode = `// Welcome to the Professional Code Editor
+function fibonacci(n) {
+    if (n <= 1) return n;
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+// Generate first 5 Fibonacci numbers
+for (let i = 0; i < 5; i++) {
+    console.log(\`Fibonacci(\${i}) = \${fibonacci(i)}\`);
+}`;
+
+        editor.value = sampleCode;
+        updateHighlight();
+        updateLineNumbers();
+    </script>
+</body>
+</html>

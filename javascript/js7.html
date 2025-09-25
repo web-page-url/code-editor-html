@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern JavaScript Code Editor</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Montserrat:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #2196F3;
+            --bg-color: #1e1e1e;
+            --text-color: #f8f8f2;
+            --header-gradient: linear-gradient(135deg, #4CAF50, #2196F3);
+            --editor-bg: #272822;
+            --nav-height: 60px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding-top: var(--nav-height);
+        }
+
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .main-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--nav-height);
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: var(--header-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: var(--header-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.2rem;
+        }
+
+        .editor-toolbar {
+            background: #2a2a2a;
+            padding: 1rem;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: #888;
+            padding: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+
+
+        .editor-wrapper {
+            position: relative;
+            background: var(--editor-bg);
+            border-radius: 0 0 10px 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        #editor-container {
+    position: relative;
+    height: 400px;
+    margin-left: 50px;
+    background: var(--editor-bg);
+}
+
+
+
+#highlight {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+    background: transparent;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1rem;
+    line-height: 1.6;
+    pointer-events: none;
+    z-index: 1;
+    white-space: pre-wrap;
+}
+
+        /* Syntax Highlighting Colors */
+        .token.comment {
+            color: #6a9955;
+        }
+
+        .token.function {
+            color: #dcdcaa;
+        }
+
+        .token.keyword {
+            color: #569cd6;
+        }
+
+        .token.string {
+            color: #ce9178;
+        }
+
+        .token.number {
+            color: #b5cea8;
+        }
+
+        .token.operator {
+            color: #d4d4d4;
+        }
+
+        .token.class-name {
+            color: #4ec9b0;
+        }
+
+        .token.constant {
+            color: #4fc1ff;
+        }
+
+        .token.punctuation {
+            color: #d4d4d4;
+        }
+
+        .token.property {
+            color: #9cdcfe;
+        }
+
+        .token.builtin {
+            color: #569cd6;
+        }
+
+        .token.parameter {
+            color: #9cdcfe;
+        }
+
+        .token.variable {
+            color: #9cdcfe;
+        }
+
+
+        .line-numbers {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 50px;
+            background: #1e1e1e;
+            padding: 1rem 0.5rem;
+            text-align: right;
+            color: #666;
+            user-select: none;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        #editor {
+            width: 100%;
+            min-height: 400px;
+            padding: 1rem 1rem 1rem 60px;
+            background: transparent;
+            color: #f8f8f2;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            border: none;
+            resize: vertical;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .run-btn,
+        .theme-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .run-btn {
+            background: var(--header-gradient);
+            color: white;
+            border: none;
+        }
+
+        .theme-btn {
+            background: #2a2a2a;
+            color: white;
+            border: 1px solid #444;
+        }
+
+        #output {
+            background: #2a2a2a;
+            padding: 1rem;
+            border-radius: 10px;
+            min-height: 150px;
+            margin-top: 1rem;
+            font-family: 'Roboto Mono', monospace;
+            white-space: pre-wrap;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 2rem;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border-radius: 8px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .button-container {
+                flex-direction: column;
+            }
+
+            .run-btn,
+            .theme-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .reveal {
+            animation: fadeIn 0.6s ease forwards;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loading-screen">
+        <lottie-player src="https://assets2.lottiefiles.com/packages/lf20_yw3nyrsv.json" background="transparent" speed="1" style="width: 300px; height: 300px;" loop autoplay></lottie-player>
+    </div>
+
+    <nav class="main-nav">
+        <div class="nav-brand">CodeCraft</div>
+        <div class="nav-links">
+            <button class="action-btn" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="action-btn">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="reveal">
+            <h1>Modern JavaScript Code Editor</h1>
+            <p class="subtitle">Write, Run, Create</p>
+        </header>
+
+        <div class="editor-container reveal">
+            <div class="editor-toolbar">
+                <div class="toolbar-actions">
+                    <button class="action-btn" title="New File"><i class="fas fa-file"></i></button>
+                    <button class="action-btn" title="Save"><i class="fas fa-save"></i></button>
+                    <button class="action-btn" title="Settings"><i class="fas fa-cog"></i></button>
+                </div>
+            </div>
+
+            <div class="editor-wrapper">
+                <div class="line-numbers" id="lineNumbers"></div>
+                <div id="editor-container">
+                    <textarea id="editor" spellcheck="false" placeholder="Write your JavaScript code here..."></textarea>
+                    <pre id="highlight"><code class="language-javascript"></code></pre>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <button onclick="runCode()" class="run-btn">
+                    <i class="fas fa-play"></i>
+                    <span>Run Code</span>
+                </button>
+                <button onclick="toggleTheme()" class="theme-btn">
+                    <i class="fas fa-moon"></i>
+                    <span>Toggle Theme</span>
+                </button>
+            </div>
+
+            <div id="output"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Remove loading screen after page load
+        window.addEventListener('load', () => {
+            document.querySelector('.loading-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.querySelector('.loading-screen').style.display = 'none';
+            }, 500);
+        });
+
+        let isDarkMode = true;
+
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('light-theme');
+            showToast(isDarkMode ? 'Dark mode enabled' : 'Light mode enabled');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+
+            setTimeout(() => {
+                toast.style.transform = 'translateY(100px)';
+                toast.style.opacity = '0';
+            }, 3000);
+        }
+
+        function runCode() {
+            const code = document.getElementById('editor').value;
+            const output = document.getElementById('output');
+            let consoleOutput = [];
+
+            const originalConsoleLog = console.log;
+            console.log = (...args) => {
+                consoleOutput.push(args.join(' '));
+            };
+
+            try {
+                const result = new Function(code)();
+                console.log = originalConsoleLog;
+
+                let finalOutput = '';
+                if (consoleOutput.length > 0) {
+                    finalOutput += '📋 Console Output:\n' + consoleOutput.join('\n') + '\n\n';
+                }
+                if (result !== undefined) {
+                    finalOutput += '🔄 Return Value:\n' + result;
+                }
+
+                output.innerText = finalOutput || '✅ Code executed successfully!';
+                output.style.animation = 'fadeIn 0.5s ease';
+                showToast('Code executed successfully!');
+            } catch (error) {
+                console.log = originalConsoleLog;
+                output.innerHTML = '❌ Error: ' + error.message;
+                showToast('Error in code execution');
+            }
+        }
+
+        function updateLineNumbers() {
+            const editor = document.getElementById('editor');
+            const lineNumbers = document.getElementById('lineNumbers');
+            const lines = editor.value.split('\n');
+            const numbers = lines.map((_, index) => index + 1).join('\n');
+            lineNumbers.innerText = numbers;
+        }
+
+        // Event Listeners
+        document.getElementById('editor').addEventListener('input', updateLineNumbers);
+        document.getElementById('editor').addEventListener('scroll', function (e) {
+            document.getElementById('lineNumbers').scrollTop = e.target.scrollTop;
+        });
+        document.getElementById('editor').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                setTimeout(updateLineNumbers, 0);
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                runCode();
+            }
+        });
+
+        // Initialize
+        updateLineNumbers();
+
+
+        function updateHighlight() {
+            const code = document.getElementById('editor').value;
+            const highlightCode = document.querySelector('#highlight code');
+            highlightCode.textContent = code;
+            Prism.highlightElement(highlightCode);
+        }
+
+        function syncScroll(element) {
+            const other = element.id === 'editor' ?
+                document.getElementById('highlight') :
+                document.getElementById('editor');
+            other.scrollTop = element.scrollTop;
+            other.scrollLeft = element.scrollLeft;
+        }
+
+        // Enhanced event listeners
+        const editor = document.getElementById('editor');
+        editor.addEventListener('input', () => {
+            updateHighlight();
+            updateLineNumbers();
+        });
+
+        editor.addEventListener('scroll', () => {
+            syncScroll(editor);
+        });
+
+        editor.addEventListener('keydown', function (e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 4;
+                updateHighlight();
+            }
+        });
+
+        // Initialize syntax highlighting
+        updateHighlight();
+
+        // Sample code to demonstrate syntax highlighting
+        const sampleCode = `// Welcome to CodeCraft Editor
+function greet(name) {
+    return "Hello, " + name + "!";
+}
+
+// Loop example
+for (let i = 0; i < 5; i++) {
+    console.log(greet("User " + i));
+}
+
+// Object example
+const config = {
+    theme: "dark",
+    fontSize: 16,
+    language: "javascript"
+};`;
+
+        editor.value = sampleCode;
+        updateHighlight();
+        updateLineNumbers();
+
+
+        // Initialize editor on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Your existing JavaScript code remains the same
+            updateHighlight();
+            updateLineNumbers();
+            editor.value = sampleCode;
+        });
+
+    </script>
+</body>
+
+</html>

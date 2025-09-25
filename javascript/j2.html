@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online JavaScript Code Editor</title>
+    <style>
+        /* Previous styles remain the same */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        #editor {
+            flex-grow: 1;
+            padding: 15px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            resize: vertical;
+            min-height: 200px;
+            font-family: 'Courier New', monospace;
+            background-color: #272822;
+            color: #f8f8f2;
+            margin-bottom: 15px;
+            width: calc(100% - 34px);
+            box-sizing: border-box;
+        }
+
+        #output {
+            padding: 15px;
+            border: 2px solid #4CAF50;
+            border-radius: 5px;
+            background-color: #fff;
+            color: #333;
+            min-height: 100px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            width: calc(100% - 34px);
+            box-sizing: border-box;
+        }
+
+        .button-container {
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Online JavaScript Code Editor</h1>
+    </header>
+
+    <textarea id="editor" placeholder="Write your JavaScript code here..."></textarea>
+
+    <div class="button-container">
+        <button onclick="runCode()">Run Code</button>
+    </div>
+
+    <div id="output"></div>
+
+    <script>
+        function runCode() {
+            const code = document.getElementById('editor').value;
+            const output = document.getElementById('output');
+            let consoleOutput = [];
+
+            // Create custom console.log
+            const originalConsoleLog = console.log;
+            console.log = (...args) => {
+                consoleOutput.push(args.join(' '));
+            };
+
+            try {
+                const result = new Function(code)();
+                
+                // Restore original console.log
+                console.log = originalConsoleLog;
+
+                // Display both console.log outputs and return value
+                let finalOutput = '';
+                if (consoleOutput.length > 0) {
+                    finalOutput += 'Console Output:\n' + consoleOutput.join('\n') + '\n\n';
+                }
+                if (result !== undefined) {
+                    finalOutput += 'Return Value:\n' + result;
+                }
+                
+                output.innerText = finalOutput || 'Code executed successfully!';
+            } catch (error) {
+                console.log = originalConsoleLog;
+                output.innerHTML = '<span style="color: red;">Error: ' + error.message + '</span>';
+            }
+        }
+
+        // Add keyboard shortcut (Ctrl/Cmd + Enter) to run code
+        document.getElementById('editor').addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                runCode();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern C++ Code Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #00599C;
+            --secondary-color: #004482;
+            --dark-bg: #1e293b;
+            --light-bg: #f8fafc;
+            --border-radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--light-bg);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+        }
+
+        #editor {
+            width: 100%;
+            height: 400px;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 20px;
+            background: var(--dark-bg);
+            color: #e2e8f0;
+            border: 2px solid #334155;
+            border-radius: var(--border-radius);
+            resize: vertical;
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .compile-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .compile-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        #output {
+            width: 100%;
+            min-height: 150px;
+            padding: 20px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            font-family: 'JetBrains Mono', monospace;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--primary-color);
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            #editor {
+                height: 300px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>C++ Code Editor</h1>
+        </header>
+
+        <textarea id="editor" spellcheck="false" placeholder="Enter your C++ code here...">
+#include <iostream>
+using namespace std;
+
+int main() {
+    cout << "Hello, World!" << endl;
+    return 0;
+}</textarea>
+
+        <div class="button-container">
+            <button class="compile-btn" onclick="compileAndRun()">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Compile & Run
+            </button>
+        </div>
+
+        <div class="loading">Compiling and running your code...</div>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        function compileAndRun() {
+            const code = document.getElementById('editor').value;
+            const output = document.getElementById('output');
+            const loading = document.querySelector('.loading');
+
+            // Show loading state
+            loading.style.display = 'block';
+            output.textContent = '';
+
+            // Using Wandbox API for C++ compilation
+            fetch('https://wandbox.org/api/compile.json', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    code: code,
+                    compiler: 'gcc-head',
+                    options: 'warning,gnu++17',
+                    stdin: ''
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.compiler_error) {
+                    output.innerHTML = `<span style="color: red;">Compilation Error:\n${data.compiler_error}</span>`;
+                } else if (data.program_error) {
+                    output.innerHTML = `<span style="color: red;">Runtime Error:\n${data.program_error}</span>`;
+                } else {
+                    output.innerHTML = `<span style="color: green;">Output:\n${data.program_output}</span>`;
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                output.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+            });
+        }
+
+        // Add keyboard shortcut (Ctrl/Cmd + Enter) to compile and run
+        document.getElementById('editor').addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                compileAndRun();
+            }
+        });
+    </script>
+</body>
+</html>

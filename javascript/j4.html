@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern JavaScript Code Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --bg-color: #1e1e1e;
+            --text-color: #f8f8f2;
+            --header-gradient: linear-gradient(135deg, #4CAF50, #2196F3);
+            --editor-bg: #272822;
+            --line-number-bg: #1e1e1e;
+        }
+
+        /* Enhanced body styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e1e1e, #2d2d2d);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        /* Enhanced container styles */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            animation: fadeIn 0.8s ease;
+        }
+
+        /* Enhanced header styles */
+        header {
+            background: var(--header-gradient);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1));
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.8rem;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            letter-spacing: 1px;
+        }
+
+        /* Enhanced editor wrapper styles */
+        .editor-wrapper {
+            position: relative;
+            background: var(--editor-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 25px;
+        }
+
+        /* Enhanced line numbers styles */
+        .line-numbers {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 50px;
+            background: var(--line-number-bg);
+            padding: 15px 8px;
+            text-align: right;
+            color: #666;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 14px;
+            border-right: 1px solid #444;
+        }
+
+        /* Enhanced editor styles */
+        #editor {
+            margin-left: 50px;
+            width: calc(100% - 50px);
+            min-height: 400px;
+            padding: 15px;
+            background: transparent;
+            color: #f8f8f2;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            border: none;
+            resize: vertical;
+        }
+
+        /* Enhanced button styles */
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        button {
+            background: var(--header-gradient);
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button i {
+            font-size: 18px;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        /* Enhanced output styles */
+        #output {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 15px;
+            min-height: 150px;
+            font-family: 'Roboto Mono', monospace;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            border: 1px solid #444;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            #editor {
+                min-height: 300px;
+                font-size: 13px;
+            }
+
+            .button-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Previous HTML structure remains the same -->
+    <div class="container">
+        <header>
+            <h1>Modern JavaScript Code Editor</h1>
+        </header>
+
+        <div class="editor-container">
+            <div class="editor-wrapper">
+                <div class="line-numbers" id="lineNumbers"></div>
+                <textarea id="editor" placeholder="Write your JavaScript code here..."></textarea>
+            </div>
+            
+            <div class="button-container">
+                <button onclick="runCode()"><i class="fas fa-play"></i> Run Code</button>
+                <button onclick="toggleTheme()"><i class="fas fa-moon"></i> Toggle Theme</button>
+            </div>
+
+            <div id="output"></div>
+        </div>
+    </div>
+
+    <script>
+        let isDarkMode = true;
+
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.style.backgroundColor = isDarkMode ? '#1e1e1e' : '#ffffff';
+            document.body.style.color = isDarkMode ? '#f8f8f2' : '#333333';
+        }
+
+        function runCode() {
+            const code = document.getElementById('editor').value;
+            const output = document.getElementById('output');
+            let consoleOutput = [];
+
+            const originalConsoleLog = console.log;
+            console.log = (...args) => {
+                consoleOutput.push(args.join(' '));
+            };
+
+            try {
+                const result = new Function(code)();
+                console.log = originalConsoleLog;
+
+                let finalOutput = '';
+                if (consoleOutput.length > 0) {
+                    finalOutput += '📋 Console Output:\n' + consoleOutput.join('\n') + '\n\n';
+                }
+                if (result !== undefined) {
+                    finalOutput += '🔄 Return Value:\n' + result;
+                }
+                
+                output.innerText = finalOutput || '✅ Code executed successfully!';
+                output.style.animation = 'none';
+                output.offsetHeight; // Trigger reflow
+                output.style.animation = 'fadeIn 0.5s ease';
+            } catch (error) {
+                console.log = originalConsoleLog;
+                output.innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+
+        document.getElementById('editor').addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                runCode();
+            }
+        });
+
+        function updateLineNumbers() {
+            const editor = document.getElementById('editor');
+            const lineNumbers = document.getElementById('lineNumbers');
+            const lines = editor.value.split('\n');
+            const numbers = lines.map((_, index) => index + 1).join('\n');
+            lineNumbers.innerText = numbers;
+        }
+
+        // Add event listeners for line numbers
+        document.getElementById('editor').addEventListener('input', updateLineNumbers);
+        document.getElementById('editor').addEventListener('scroll', function(e) {
+            document.getElementById('lineNumbers').scrollTop = e.target.scrollTop;
+        });
+
+        // Initialize line numbers
+        updateLineNumbers();
+
+        // Update line numbers when the editor content changes
+        document.getElementById('editor').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                setTimeout(updateLineNumbers, 0);
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                runCode();
+            }
+        });
+        
+    </script>
+    <!-- Previous JavaScript remains the same -->
+</body>
+</html>

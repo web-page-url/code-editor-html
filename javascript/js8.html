@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern JavaScript Code Editor</title>
+    
+    <!-- External Resources -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <!-- <div class="loading-screen">
+        <lottie-player src="https://assets2.lottiefiles.com/packages/lf20_yw3nyrsv.json" background="transparent" speed="1" style="width: 300px; height: 300px;" loop autoplay></lottie-player>
+    </div> -->
+
+    <nav class="main-nav">
+        <div class="nav-brand">CodeCraft</div>
+        <div class="nav-links">
+            <button class="action-btn" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="action-btn">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="reveal">
+            <h1>Modern JavaScript Code Editor</h1>
+            <p class="subtitle">Write, Run, Create</p>
+        </header>
+
+        <div class="editor-container reveal">
+            <div class="editor-toolbar">
+                <div class="toolbar-actions">
+                    <button class="action-btn" title="New File"><i class="fas fa-file"></i></button>
+                    <button class="action-btn" title="Save"><i class="fas fa-save"></i></button>
+                    <button class="action-btn" title="Settings"><i class="fas fa-cog"></i></button>
+                </div>
+            </div>
+
+            <!-- Single Editor Instance -->
+            <div class="editor-wrapper">
+                <div class="line-numbers" id="lineNumbers"></div>
+                <textarea id="editor" spellcheck="false" placeholder="Write your JavaScript code here..."></textarea>
+            </div>
+
+            <div class="button-container">
+                <button onclick="runCode()" class="run-btn">
+                    <i class="fas fa-play"></i>
+                    <span>Run Code</span>
+                </button>
+                <button onclick="toggleTheme()" class="theme-btn">
+                    <i class="fas fa-moon"></i>
+                    <span>Toggle Theme</span>
+                </button>
+            </div>
+
+            <div id="output"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <!-- External Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+    <!-- Styles -->
+   <style>
+    /* Root variables for consistent theming */
+:root {
+    --primary-color: #4CAF50;
+    --secondary-color: #2196F3;
+    --bg-color: #1e1e1e;
+    --text-color: #f8f8f2;
+    --header-gradient: linear-gradient(135deg, #4CAF50, #2196F3);
+    --editor-bg: #272822;
+    --nav-height: 60px;
+}
+
+/* Reset default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Base body styles */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    padding-top: var(--nav-height);
+}
+
+/* Loading screen styles */
+.loading-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Navigation bar styles */
+.main-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--nav-height);
+    background: rgba(30, 30, 30, 0.95);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Brand logo styles */
+.nav-brand {
+    font-size: 1.5rem;
+    font-weight: 600;
+    background: var(--header-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Container styles */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Header styles */
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    background: var(--header-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Subtitle styles */
+.subtitle {
+    color: #888;
+    font-size: 1.2rem;
+}
+
+/* Editor toolbar styles */
+.editor-toolbar {
+    background: #2a2a2a;
+    padding: 1rem;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Toolbar actions container */
+.toolbar-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Action button styles */
+.action-btn {
+    background: none;
+    border: none;
+    color: #888;
+    padding: 0.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* Editor wrapper styles */
+.editor-wrapper {
+    position: relative;
+    background: var(--editor-bg);
+    border-radius: 0 0 10px 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    height: 400px;
+}
+
+/* Line numbers styles */
+.line-numbers {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 50px;
+    background: #1e1e1e;
+    padding: 1rem 0.5rem;
+    text-align: right;
+    color: #666;
+    user-select: none;
+    font-family: 'Roboto Mono', monospace;
+}
+
+/* Editor styles */
+#editor {
+    width: 100%;
+    height: 100%;
+    padding: 1rem 1rem 1rem 60px;
+    background: var(--editor-bg);
+    color: var(--text-color);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1rem;
+    line-height: 1.6;
+    border: none;
+    resize: none;
+    outline: none;
+}
+
+/* Button container styles */
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+/* Run and theme button styles */
+.run-btn,
+.theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.run-btn {
+    background: var(--header-gradient);
+    color: white;
+    border: none;
+}
+
+.theme-btn {
+    background: #2a2a2a;
+    color: white;
+    border: 1px solid #444;
+}
+
+/* Output area styles */
+#output {
+    background: #2a2a2a;
+    padding: 1rem;
+    border-radius: 10px;
+    min-height: 150px;
+    margin-top: 1rem;
+    font-family: 'Roboto Mono', monospace;
+    white-space: pre-wrap;
+}
+
+/* Toast notification styles */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    padding: 1rem 2rem;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    border-radius: 8px;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    .button-container {
+        flex-direction: column;
+    }
+
+    .run-btn,
+    .theme-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Animation class */
+.reveal {
+    animation: fadeIn 0.6s ease forwards;
+}
+
+   </style>
+
+    <!-- JavaScript -->
+    <script>
+        // Initialize editor and required elements
+const editor = document.getElementById('editor');
+const lineNumbers = document.getElementById('lineNumbers');
+const output = document.getElementById('output');
+const toast = document.getElementById('toast');
+
+// Sample code for initial editor content
+const sampleCode = `// Welcome to CodeCraft Editor
+function greet(name) {
+    return "Hello, " + name + "!";
+}
+
+// Loop example
+for (let i = 0; i < 5; i++) {
+    console.log(greet("User " + i));
+}
+
+// Object example
+const config = {
+    theme: "dark",
+    fontSize: 16,
+    language: "javascript"
+};`;
+
+// Theme state management
+let isDarkMode = true;
+
+// Remove loading screen after page load
+window.addEventListener('load', () => {
+    document.querySelector('.loading-screen').style.opacity = '0';
+    setTimeout(() => {
+        document.querySelector('.loading-screen').style.display = 'none';
+    }, 500);
+});
+
+// Theme toggle functionality
+function toggleTheme() {
+    isDarkMode = !isDarkMode;
+    document.body.classList.toggle('light-theme');
+    showToast(isDarkMode ? 'Dark mode enabled' : 'Light mode enabled');
+}
+
+// Toast notification system
+function showToast(message) {
+    toast.textContent = message;
+    toast.style.transform = 'translateY(0)';
+    toast.style.opacity = '1';
+
+    setTimeout(() => {
+        toast.style.transform = 'translateY(100px)';
+        toast.style.opacity = '0';
+    }, 3000);
+}
+
+// Code execution functionality
+function runCode() {
+    const code = editor.value;
+    let consoleOutput = [];
+
+    // Capture console.log output
+    const originalConsoleLog = console.log;
+    console.log = (...args) => {
+        consoleOutput.push(args.join(' '));
+    };
+
+    try {
+        const result = new Function(code)();
+        console.log = originalConsoleLog;
+
+        let finalOutput = '';
+        if (consoleOutput.length > 0) {
+            finalOutput += '📋 Console Output:\n' + consoleOutput.join('\n') + '\n\n';
+        }
+        if (result !== undefined) {
+            finalOutput += '🔄 Return Value:\n' + result;
+        }
+
+        output.innerText = finalOutput || '✅ Code executed successfully!';
+        output.style.animation = 'fadeIn 0.5s ease';
+        showToast('Code executed successfully!');
+    } catch (error) {
+        console.log = originalConsoleLog;
+        output.innerHTML = '❌ Error: ' + error.message;
+        showToast('Error in code execution');
+    }
+}
+
+// Line numbers functionality
+function updateLineNumbers() {
+    const lines = editor.value.split('\n');
+    const numbers = lines.map((_, index) => index + 1).join('\n');
+    lineNumbers.innerText = numbers;
+}
+
+// Syntax highlighting functionality
+function updateHighlight() {
+    const code = editor.value;
+    const highlightCode = document.querySelector('#highlight code');
+    highlightCode.textContent = code;
+    Prism.highlightElement(highlightCode);
+}
+
+// Scroll synchronization
+function syncScroll(element) {
+    const other = element.id === 'editor' ? 
+        document.getElementById('highlight') : 
+        document.getElementById('editor');
+    other.scrollTop = element.scrollTop;
+    other.scrollLeft = element.scrollLeft;
+}
+
+// Event Listeners
+editor.addEventListener('input', () => {
+    updateHighlight();
+    updateLineNumbers();
+});
+
+editor.addEventListener('scroll', () => {
+    syncScroll(editor);
+});
+
+editor.addEventListener('keydown', function(e) {
+    // Handle Tab key
+    if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 4;
+        updateHighlight();
+    }
+    
+    // Handle Enter key
+    if (e.key === 'Enter') {
+        setTimeout(updateLineNumbers, 0);
+    }
+    
+    // Handle Ctrl/Cmd + Enter to run code
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        runCode();
+    }
+});
+
+// Initialize editor on page load
+document.addEventListener('DOMContentLoaded', () => {
+    editor.value = sampleCode;
+    updateHighlight();
+    updateLineNumbers();
+});
+
+// File handling functions
+function saveCode() {
+    const code = editor.value;
+    const blob = new Blob([code], { type: 'text/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'code.js';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Code saved successfully!');
+}
+
+function newFile() {
+    editor.value = '';
+    updateHighlight();
+    updateLineNumbers();
+    showToast('New file created');
+}
+
+// Initialize everything
+updateHighlight();
+updateLineNumbers();
+
+    </script>
+</body>
+</html>
